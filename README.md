@@ -2,6 +2,8 @@
 
 把第三方影视/短剧内容源接进 CapyPlayer。**纯 JS 脚本，零后端、零依赖。**
 
+> 仓库：`Tonyhilo/capyplayer-widgets` · 分发：jsDelivr CDN · 两个组件均已自测通过
+
 | 组件 | 文件 | 覆盖目标 | 状态 |
 |---|---|---|---|
 | **苹果CMS 影视** | `widget/maccms.js` | 苹果CMS（maccms）站群，**上万个站点** | ✅ 自测 87/87 |
@@ -33,19 +35,49 @@ node tools/selftest.js            # 红果：36 项断言
 两个脚本都用模拟沙箱加载组件，跑在**真实站点**上。苹果CMS 那个额外带一条**离线夹具轨**：
 把各站页面形态做成合成 HTML，验证解析器，不受站点存活影响。
 
-### 2. 托管组件脚本
+### 2. 安装（组件已托管在 jsDelivr，开箱即用）
 
-把 `widget/*.js` 传到一个**公开可访问的 URL**（GitHub Raw / Gist / NAS / 对象存储），
-拿到形如 `https://…/maccms.js` 的地址。
+两个组件都已发布到公共仓库 `Tonyhilo/capyplayer-widgets`，通过 jsDelivr CDN 分发：
 
-### 3. 安装
+| 组件 | 组件 JS 地址 |
+|---|---|
+| **苹果CMS 影视** | `https://cdn.jsdelivr.net/gh/Tonyhilo/capyplayer-widgets@main/widget/maccms.js` |
+| **红果短剧** | `https://cdn.jsdelivr.net/gh/Tonyhilo/capyplayer-widgets@main/widget/hongguo.js` |
 
-浏览器打开 `web/index.html`，顶部切换组件 → 粘贴地址 → 点按钮或扫码。
+**安装方式（任选）**
 
-深链格式（官方规范）：
+- **扫码**：浏览器打开 `web/index.html`（地址已预填，打开就能看到二维码）→ 手机扫码 → App 自动安装
+- **点链接**：手机浏览器打开下面这条深链
 
 ```
-com.feifeiduck.capyplayer://add-widget?data=<base64url(组件JS地址)>
+# 苹果CMS 影视
+com.feifeiduck.capyplayer://add-widget?data=aHR0cHM6Ly9jZG4uanNkZWxpdnIubmV0L2doL1RvbnloaWxvL2NhcHlwbGF5ZXItd2lkZ2V0c0BtYWluL3dpZGdldC9tYWNjbXMuanM
+
+# 红果短剧
+com.feifeiduck.capyplayer://add-widget?data=aHR0cHM6Ly9jZG4uanNkZWxpdnIubmV0L2doL1RvbnloaWxvL2NhcHlwbGF5ZXItd2lkZ2V0c0BtYWluL3dpZGdldC9ob25nZ3VvLmpz
+```
+
+深链格式（官方规范）：`com.feifeiduck.capyplayer://add-widget?data=<base64url(组件JS地址)>`
+
+**CDN 端点（不通时可换）**
+
+| 端点 | 说明 |
+|---|---|
+| `cdn.jsdelivr.net` | 默认，实测最快 |
+| `fastly.jsdelivr.net` | 备用，实测同样快 |
+| `gcore.jsdelivr.net` | 备用 |
+| `raw.githubusercontent.com/Tonyhilo/capyplayer-widgets/main/widget/maccms.js` | 直连 GitHub，国内可能不稳 |
+
+> **想锁定版本**，把 `@main` 换成 commit SHA 即可（如 `@f39b728…`），
+> 避免以后改动 `main` 导致行为漂移。
+
+### 3. 自己改一版 / 重新托管
+
+```bash
+# 本仓库已配好代理与远端，改完直接推
+git add -A && git commit -m "..." && git push
+# jsDelivr 会缓存在线内容，刷新用：
+#   https://purge.jsdelivr.net/gh/Tonyhilo/capyplayer-widgets@main/widget/maccms.js
 ```
 
 ---

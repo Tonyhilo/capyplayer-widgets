@@ -310,6 +310,7 @@
       key: "maccms",
       tab: "苹果CMS 影视",
       file: "maccms.js",
+      jsUrl: "https://cdn.jsdelivr.net/gh/Tonyhilo/capyplayer-widgets@main/widget/maccms.js",
       version: "v1.0.0",
       title: "苹果CMS 影视",
       sub: "苹果CMS（maccms）<b>站群通用适配器</b> —— 内置五五短剧 / 花生短剧，" +
@@ -363,6 +364,7 @@
       key: "hongguo",
       tab: "红果短剧",
       file: "hongguo.js",
+      jsUrl: "https://cdn.jsdelivr.net/gh/Tonyhilo/capyplayer-widgets@main/widget/hongguo.js",
       version: "v1.0.0",
       title: "红果短剧",
       sub: "真人剧 / 漫剧 / AI剧 / 动漫 —— 分类浏览、关键词搜索、按剧集播放。" +
@@ -506,17 +508,14 @@
     try { localStorage.setItem(storeKey(current.key), url); } catch (e) {}
   }
 
-  /* 回填：优先上一次填过的地址，其次推断同目录下的同名文件 */
+  /* 回填优先级：上次填过的 → 官方 jsDelivr 地址（开箱即用）→ 从同目录推断 */
   function restoreUrl() {
     var v = "";
     try { v = localStorage.getItem(storeKey(current.key)) || ""; } catch (e) {}
+    if (!v) v = current.jsUrl || "";
     if (!v && location.protocol.indexOf("http") === 0) {
       var guess = location.href.replace(/[^/]*$/, "").replace(/\/web\/?$/, "/widget/") + current.file;
       if (new RegExp("/widget/" + current.file.replace(".", "\\.") + "$").test(guess)) v = guess;
-    }
-    if (!v) {
-      // 没存过也没法推断 —— 至少在页面上给个形状提示
-      v = "";
     }
     $url.value = v;
   }
