@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CapyPlayer 组件 · 一键安装</title>
+<meta name="description" content="红果短剧 / 苹果CMS 影视 的 CapyPlayer 组件：填上 JS 地址即可生成安装深链与二维码。">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --rose:#e8546b; --rose-deep:#c13352; --amber:#f5903f;
+    --ink:#2b1a1f; --ink-soft:#6b5258; --ink-faint:#9c858b;
+    --glass:rgba(255,255,255,.62);
+    --glass-strong:rgba(255,255,255,.82);
+    --line:rgba(43,26,31,.10);
+    --shadow:0 18px 46px -18px rgba(120,40,60,.42);
+    --radius:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    color:var(--ink); min-height:100vh; line-height:1.6;
+    background:
+      radial-gradient(1200px 620px at 8% -10%, #ffd9df 0%, transparent 60%),
+      radial-gradient(900px 520px at 105% 6%, #ffe2c2 0%, transparent 58%),
+      radial-gradient(760px 560px at 50% 118%, #ffcfd8 0%, transparent 62%),
+      linear-gradient(168deg,#fff8f6 0%,#fdf1ef 44%,#fbeae6 100%);
+    background-attachment:fixed;
+    padding:clamp(18px,4vw,52px) clamp(14px,4vw,32px) 64px;
+  }
+  .wrap{max-width:920px;margin:0 auto}
+
+  /* ---------- Hero ---------- */
+  .hero{text-align:center;margin-bottom:clamp(20px,4vw,34px)}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 15px;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:.3px;
+    color:var(--rose-deep);background:rgba(255,255,255,.7);
+    border:1px solid rgba(232,84,107,.22);backdrop-filter:blur(12px);
+    box-shadow:0 6px 18px -10px rgba(193,51,82,.5);
+  }
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--rose);
+    box-shadow:0 0 0 4px rgba(232,84,107,.16)}
+  h1{
+    font-size:clamp(28px,6.6vw,46px);line-height:1.16;letter-spacing:-.02em;
+    margin:16px 0 10px;font-weight:800;
+    background:linear-gradient(118deg,#c13352 0%,#e8546b 42%,#f5903f 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:var(--ink-soft);font-size:clamp(14px,2.6vw,16.5px);max-width:600px;margin:0 auto}
+  .sub b{color:var(--rose-deep)}
+
+  /* ---------- 组件切换 ---------- */
+  .tabs{
+    display:flex;gap:6px;padding:5px;margin:0 auto clamp(18px,3vw,26px);width:fit-content;max-width:100%;
+    background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.85);
+    border-radius:14px;backdrop-filter:blur(16px);
+    box-shadow:0 10px 26px -16px rgba(120,40,60,.5);
+  }
+  .tabs button{
+    padding:9px 17px;border:0;border-radius:10px;cursor:pointer;font-family:inherit;
+    font-size:13.5px;font-weight:650;color:var(--ink-soft);background:transparent;
+    transition:background .18s,color .18s,box-shadow .18s;white-space:nowrap;
+  }
+  .tabs button:hover{color:var(--rose-deep)}
+  .tabs button.on{
+    color:#fff;background:linear-gradient(120deg,var(--rose-deep),var(--rose) 60%,var(--amber));
+    box-shadow:0 10px 22px -12px rgba(193,51,82,.85);
+  }
+
+  /* ---------- 卡片 ---------- */
+  .card{
+    background:var(--glass);backdrop-filter:blur(22px) saturate(1.5);
+    -webkit-backdrop-filter:blur(22px) saturate(1.5);
+    border:1px solid rgba(255,255,255,.75);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:clamp(18px,3.6vw,30px);margin-bottom:20px;
+  }
+  .card h2{
+    font-size:16px;font-weight:700;letter-spacing:-.01em;
+    display:flex;align-items:center;gap:9px;margin-bottom:6px;
+  }
+  .card h2 .ic{
+    width:26px;height:26px;flex:0 0 26px;border-radius:9px;
+    display:grid;place-items:center;font-size:14px;
+    background:linear-gradient(135deg,var(--rose),var(--amber));color:#fff;
+    box-shadow:0 6px 14px -6px rgba(193,51,82,.65);
+  }
+  .hint{color:var(--ink-faint);font-size:12.5px;margin-bottom:14px}
+
+  /* ---------- 安装区 ---------- */
+  .install{display:grid;grid-template-columns:1fr auto;gap:clamp(18px,3.4vw,32px);align-items:start}
+  @media(max-width:640px){.install{grid-template-columns:1fr}}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:7px}
+  input[type=url]{
+    width:100%;padding:13px 15px;font-size:14px;color:var(--ink);
+    border-radius:13px;border:1px solid var(--line);background:var(--glass-strong);
+    outline:none;transition:border-color .18s,box-shadow .18s;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  input[type=url]:focus{border-color:rgba(232,84,107,.55);box-shadow:0 0 0 4px rgba(232,84,107,.12)}
+  .cta{
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    width:100%;margin-top:14px;padding:15px 20px;border:0;border-radius:14px;cursor:pointer;
+    font-size:15.5px;font-weight:700;color:#fff;letter-spacing:.2px;
+    background:linear-gradient(120deg,var(--rose-deep),var(--rose) 55%,var(--amber));
+    box-shadow:0 14px 30px -12px rgba(193,51,82,.75);
+    transition:transform .16s,box-shadow .16s;
+    font-family:inherit;
+  }
+  .cta:hover{transform:translateY(-2px);box-shadow:0 20px 38px -14px rgba(193,51,82,.8)}
+  .cta:active{transform:translateY(0)}
+  .cta[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+  .qrbox{
+    width:172px;padding:13px;border-radius:17px;background:#fff;
+    border:1px solid var(--line);box-shadow:0 12px 28px -16px rgba(120,40,60,.4);
+    display:flex;flex-direction:column;align-items:center;gap:9px;
+  }
+  #qr{width:146px;height:146px;display:grid;place-items:center}
+  #qr img,#qr canvas{width:146px!important;height:146px!important;display:block;border-radius:6px}
+  .qrbox .cap{font-size:11px;color:var(--ink-faint);text-align:center;line-height:1.45}
+
+  .row-btns{display:flex;gap:9px;margin-top:11px;flex-wrap:wrap}
+  .ghost{
+    padding:9px 15px;font-size:12.5px;font-weight:600;cursor:pointer;
+    color:var(--rose-deep);background:rgba(255,255,255,.75);
+    border:1px solid rgba(232,84,107,.26);border-radius:11px;
+    transition:background .16s,border-color .16s;font-family:inherit;
+  }
+  .ghost:hover{background:#fff;border-color:rgba(232,84,107,.5)}
+  .link-out{
+    margin-top:12px;padding:11px 13px;border-radius:11px;font-size:11.5px;line-height:1.6;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;
+    background:rgba(43,26,31,.045);border:1px dashed rgba(43,26,31,.14);color:var(--ink-soft);
+    max-height:104px;overflow:auto;
+  }
+
+  /* ---------- 提示卡 ---------- */
+  .warn{
+    background:linear-gradient(135deg,rgba(255,224,178,.72),rgba(255,205,210,.6));
+    border:1px solid rgba(245,144,63,.4);
+  }
+  .warn h2 .ic{background:linear-gradient(135deg,#f5903f,#e8546b)}
+  .warn p{font-size:13.5px;color:#6d3b1e}
+  .warn strong{color:#8a3b12}
+  .warn code{
+    background:rgba(255,255,255,.7);padding:2px 6px;border-radius:5px;
+    font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#8a3b12;
+  }
+  .ok{
+    background:linear-gradient(135deg,rgba(206,246,222,.7),rgba(210,238,255,.6));
+    border:1px solid rgba(45,160,110,.32);
+  }
+  .ok h2 .ic{background:linear-gradient(135deg,#2da06e,#4aa8e0)}
+  .ok p{font-size:13.5px;color:#1d5c42}
+  .ok code{
+    background:rgba(255,255,255,.72);padding:2px 6px;border-radius:5px;
+    font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#1d5c42;
+  }
+
+  /* ---------- 列表 ---------- */
+  .feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(212px,1fr));gap:12px}
+  .feat .f{
+    padding:15px 16px;border-radius:15px;background:var(--glass-strong);
+    border:1px solid rgba(255,255,255,.85);
+  }
+  .feat .f .t{font-size:13.5px;font-weight:700;margin-bottom:5px;color:var(--rose-deep)}
+  .feat .f .d{font-size:12.5px;color:var(--ink-soft);line-height:1.62}
+
+  ul.steps{list-style:none;counter-reset:s}
+  ul.steps li{
+    counter-increment:s;position:relative;padding:9px 0 9px 40px;
+    font-size:13.5px;color:var(--ink-soft);border-bottom:1px solid var(--line);
+  }
+  ul.steps li:last-child{border-bottom:0}
+  ul.steps li::before{
+    content:counter(s);position:absolute;left:0;top:9px;
+    width:24px;height:24px;border-radius:8px;display:grid;place-items:center;
+    font-size:11.5px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--rose),var(--amber));
+  }
+  ul.steps li b{color:var(--ink);font-weight:650}
+  code.inline{
+    background:rgba(43,26,31,.06);padding:2px 6px;border-radius:5px;font-size:12px;
+    font-family:ui-monospace,Menlo,monospace;color:var(--rose-deep);
+  }
+  table.sites{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+  table.sites th,table.sites td{
+    text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;
+  }
+  table.sites th{font-weight:650;color:var(--ink-soft);font-size:11.5px;letter-spacing:.02em}
+  table.sites td b{color:var(--ink)}
+  table.sites td.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink-soft)}
+  .pill{
+    display:inline-block;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:700;
+    background:rgba(45,160,110,.14);color:#1d7d55;border:1px solid rgba(45,160,110,.3);
+  }
+  .pill.warnp{background:rgba(245,144,63,.16);color:#8a3b12;border-color:rgba(245,144,63,.35)}
+  .pill.bad{background:rgba(43,26,31,.07);color:#6b5258;border-color:rgba(43,26,31,.16)}
+
+  footer{text-align:center;color:var(--ink-faint);font-size:12px;margin-top:30px;line-height:1.9}
+  footer a{color:var(--rose-deep);text-decoration:none}
+  .toast{
+    position:fixed;left:50%;bottom:30px;transform:translate(-50%,18px);
+    padding:11px 21px;border-radius:13px;font-size:13px;font-weight:600;color:#fff;
+    background:rgba(43,26,31,.9);backdrop-filter:blur(12px);
+    opacity:0;pointer-events:none;transition:opacity .24s,transform .24s;z-index:99;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <span class="badge"><span class="dot"></span>CapyPlayer Widget · <span id="ver">v1.0.0</span></span>
+    <h1 id="title">CapyPlayer 组件</h1>
+    <p class="sub" id="sub"></p>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <!-- 安装 -->
+  <div class="card">
+    <h2><span class="ic">↓</span>安装到 CapyPlayer</h2>
+    <p class="hint">组件脚本必须先托管到一个可公开访问的 URL，App 才能加载它。填好后点按钮或扫码。</p>
+
+    <div class="install">
+      <div>
+        <label for="jsUrl">组件 JS 的公网地址（<span id="fname">widget.js</span>）</label>
+        <input id="jsUrl" type="url" spellcheck="false" placeholder="" value="">
+        <button class="cta" id="btnInstall" disabled>
+          <span>安装到 CapyPlayer</span>
+        </button>
+        <div class="row-btns">
+          <button class="ghost" id="btnCopyLink">复制安装链接</button>
+          <button class="ghost" id="btnCopyUrl">复制 JS 地址</button>
+          <button class="ghost" id="btnOpen">在浏览器打开 JS</button>
+        </div>
+        <div class="link-out" id="linkOut">填写上方地址后，这里会生成安装深链。</div>
+      </div>
+
+      <div class="qrbox">
+        <div id="qr"><span style="font-size:11px;color:#9c858b;text-align:center;line-height:1.5">二维码<br>待生成</span></div>
+        <div class="cap">手机扫码直接唤起 App</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 边界提示（每个组件不同） -->
+  <div class="card" id="noticeCard">
+    <h2><span class="ic">!</span><span id="noticeTitle">能力边界</span></h2>
+    <div id="noticeBody"></div>
+  </div>
+
+  <!-- 能力 -->
+  <div class="card">
+    <h2><span class="ic">◆</span>组件能力</h2>
+    <p class="hint">对应 CapyPlayer 契约里的模块 + loadDetail 二次解析。</p>
+    <div class="feat" id="feats"></div>
+  </div>
+
+  <!-- 站点表（仅 maccms 用） -->
+  <div class="card" id="sitesCard" style="display:none">
+    <h2><span class="ic">≡</span>站点实测状态</h2>
+    <p class="hint">全部结论来自 2026-10-01 的真机实测，非文档推测。表格会随维护更新。</p>
+    <table class="sites" id="sitesTable"></table>
+  </div>
+
+  <!-- 部署 -->
+  <div class="card">
+    <h2><span class="ic">⚙</span>怎么拿到那个公网 URL</h2>
+    <p class="hint">任选一种，把 <code class="inline" id="fileName2">widget.js</code> 传上去即可。</p>
+    <ul class="steps">
+      <li><b>GitHub Raw</b> —— 推到仓库，用 <code class="inline">raw.githubusercontent.com/…</code> 地址。最省事，但国内访问可能不稳。</li>
+      <li><b>Gist</b> —— 同上，更轻量，适合单文件。</li>
+      <li><b>你自己的 NAS / 对象存储</b> —— 放到能被公网访问的静态目录，返回 <code class="inline">application/javascript</code>。国内速度最好。</li>
+      <li><b>本机临时验证</b> —— 起一个静态服务器，用内网地址装到同一局域网的手机上先试。</li>
+    </ul>
+  </div>
+
+  <!-- 自测 -->
+  <div class="card">
+    <h2><span class="ic">✓</span>装之前先自测</h2>
+    <p class="hint">不用等装进 App，本地就能把组件跑在真实站点上验证。</p>
+    <ul class="steps" id="selfSteps"></ul>
+  </div>
+
+  <footer>
+    <span id="footerSrc"></span><br>
+    组件仅做数据搬运，不存储、不分发媒体文件 · 内容版权归原平台所有<br>
+    请在符合当地法律法规的前提下使用 ·
+    <a href="https://capyplayer.feifeiduck.com/zh/dev/widget/widgetdev" target="_blank" rel="noopener">开发文档</a>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var APP_SCHEME = "com.feifeiduck.capyplayer://add-widget";
+
+  /* ==========================================================================
+   * 组件登记表：加新组件只需在这里补一条
+   * ======================================================================== */
+  var WIDGETS = [
+    {
+      key: "maccms",
+      tab: "苹果CMS 影视",
+      file: "maccms.js",
+      version: "v1.0.0",
+      title: "苹果CMS 影视",
+      sub: "苹果CMS（maccms）<b>站群通用适配器</b> —— 内置五五短剧 / 花生短剧，" +
+           "也可填任意苹果CMS 站地址，<b>路由自动探测</b>。一套代码覆盖上万个站点。",
+      noticeClass: "ok",
+      noticeTitle: "为什么这个比单站适配更值",
+      noticeBody:
+        '<p>苹果CMS 是国内最主流的开源影视建站程序，全网<span class="pill">上万个站点</span>。' +
+        '它们的数据模型与播放变量高度统一，但<b>路由可被站长自定义</b> —— 实测三种形态：' +
+        '五五短剧走 <code>/index.php/vod/…</code> 标准式；花生短剧走 <code>/zywview/</code>、' +
+        '<code>/zywplay/</code> 自定义伪静态；168 影院走 <code>/xzyxvd/</code> 且播放链接由 JS 生成。' +
+        '<br><br>所以组件不写死路由，而是<b>抓首页 → 嗅探链接形态 → 实测验证 → 缓存 24 小时</b>。' +
+        '探测一次约 2 秒，之后走缓存。</p>',
+      feats: [
+        { t: "站点切换（enum）", d: "内置五五短剧 / 花生短剧，或选「自定义站点」填任意苹果CMS 地址。" },
+        { t: "分类（category）", d: "自动嗅探站点分类导航，点进即浏览。找不到时回退默认分类。" },
+        { t: "影视库（media_list）", d: "按分类分页浏览，自动提取标题 / 封面 / 集数备注。" },
+        { t: "搜索（media_list）", d: "自动探测搜索路由，并排除「被重写回首页」的假路径。" },
+        { t: "详情（loadDetail）", d: "多线路多集解析，取集数最多的线路，输出每集明文直链。" },
+        { t: "播放地址三级回退", d: "player_aaaa → 内联 iframe/JS → 全页扫描 m3u8/mp4，覆盖不同模板。" }
+      ],
+      sites: [
+        { name: "五五短剧", host: "www.duanju55.com", state: "ok", stateText: "实测可用",
+          route: "/index.php/vod/type|detail|play/",
+          note: "整剧打包成单个 m3u8；921 分片 × 2s；PLAYLIST-TYPE:VOD；无 EXT-X-KEY；TS 明文" },
+        { name: "花生短剧", host: "www.zywest263.com", state: "ok", stateText: "实测可用",
+          route: "/zywtype/、/zywview/、/zywplay/",
+          note: "真·多集（每集独立播放页）；播放地址明文内联在页面 JS 里，无 player_aaaa" },
+        { name: "短剧网站（网果）", host: "www.duanju2.com", state: "warn", stateText: "待深测",
+          route: "/show/duanju-----------.html",
+          note: "站点可达，路由未逐条实测 → 交给自动探测" },
+        { name: "168 影院", host: "www.xzyx168.com", state: "bad", stateText: "不适用",
+          route: "/xzyxvt/、/xzyxvd/",
+          note: "class 随机化 + 播放链接 JS 生成 + 未知路径重写回首页，HTML 解析拿不到分集" },
+        { name: "ptt.red", host: "ptt.red", state: "bad", stateText: "站点挂了",
+          route: "—", note: "Cloudflare 403" },
+        { name: "芽果/星芽", host: "app.whjzjx.cn", state: "bad", stateText: "站点挂了",
+          route: "—", note: "503；且为私有 API 非苹果CMS" }
+      ],
+      selfSteps: [
+        '在项目根目录执行 <code class="inline">node tools/selftest_maccms.js</code>',
+        '离线夹具轨：把五五短剧 / 花生短剧的页面形态做成合成 HTML，验证播放页三级回退、列表字段提取、路由形态识别（不受站点存活影响）',
+        '真实站点轨：真拉两个站，走完 分类 → 列表 → 翻页 → 搜索 → 详情 → 取流',
+        '直链真实性：抓 m3u8 清单校验 <code class="inline">#EXT-X-KEY</code> 是否存在、清单类型，再下首个分片校验是否为明文 MPEG-TS',
+        '自动探测轨：用「自定义站点」强制冷探测，验证它能自己重新发现全部路由，且结果被缓存'
+      ],
+      footerSrc: "数据来源：苹果CMS 站群（五五短剧 / 花生短剧等）",
+      ph: "https://raw.githubusercontent.com/you/repo/main/maccms.js"
+    },
+    {
+      key: "hongguo",
+      tab: "红果短剧",
+      file: "hongguo.js",
+      version: "v1.0.0",
+      title: "红果短剧",
+      sub: "真人剧 / 漫剧 / AI剧 / 动漫 —— 分类浏览、关键词搜索、按剧集播放。" +
+           "<br>一个 <b>纯 JS 脚本</b>，零后端、零依赖。",
+      noticeClass: "warn",
+      noticeTitle: "必须先知道的能力边界",
+      noticeBody:
+        '<p>红果<strong>网页版每部剧只开放前 N 集试看</strong>（实测 18 部剧的可播集数全部为 <code>3</code>），' +
+        '第 N+1 集的播放页会直接返回 <code>404</code>。所以本组件默认只输出「可播集」，' +
+        '并在详情里标注 <code>可播 3 集 / 全 77 集</code>。' +
+        '<br><br>想要<strong>全集可播</strong>，需要自建解密代理：红果 App 接口下发的是 ' +
+        '<code>CENC AES-128-CTR</code> 加密流（密钥由 <code>spade_a</code> 推导），播放器无法直接解。' +
+        '组件已预留 <code>HG_CONFIG.proxyBase</code>，接上你的服务即可解锁全集。</p>',
+      feats: [
+        { t: "分类（category）", d: "4 个内容频道：真人剧 · 漫剧 · AI剧 · 动漫。" },
+        { t: "剧库（media_list）", d: "按频道分页浏览，每页 24 条，带封面 / 简介 / 标签 / 年份 / 热度。" },
+        { t: "搜索（media_list）", d: "按剧名关键词搜索，返回命中列表与总命中数。" },
+        { t: "详情（loadDetail）", d: "解析剧集列表、可播集明文直链、演职员表与标签。" }
+      ],
+      sites: null,
+      selfSteps: [
+        '在项目根目录执行 <code class="inline">node tools/selftest.js</code>',
+        '脚本用模拟沙箱加载 <code class="inline">widget/hongguo.js</code>，依次跑契约预检、分类、列表、搜索、详情',
+        '对解析出的每条直链发 <b>Range 请求</b>，校验返回 <code class="inline">206 + video/mp4 + ftyp</code>'
+      ],
+      footerSrc: "数据来源：红果短剧网页版（hongguoduanju.com）",
+      ph: "https://raw.githubusercontent.com/you/repo/main/hongguo.js"
+    }
+  ];
+
+  /* ========================================================================== */
+  var $url = document.getElementById("jsUrl");
+  var $btn = document.getElementById("btnInstall");
+  var $out = document.getElementById("linkOut");
+  var $qr = document.getElementById("qr");
+  var $toast = document.getElementById("toast");
+  var currentLink = "";
+  var current = WIDGETS[0];
+
+  function toast(msg) {
+    $toast.textContent = msg;
+    $toast.classList.add("on");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { $toast.classList.remove("on"); }, 1900);
+  }
+
+  /* base64url（RFC 4648），按官方文档要求去掉 padding、+→-、/→_ */
+  function toBase64Url(str) {
+    var b64 = btoa(unescape(encodeURIComponent(str)));
+    return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function buildLink(url) { return APP_SCHEME + "?data=" + toBase64Url(url); }
+  function isHttpUrl(u) { return /^https?:\/\/[^\s]+$/i.test(u); }
+  function storeKey(k) { return "capy_widget_js_url_" + k; }
+
+  /* ---------- 渲染：切换组件时重建整页文案 ---------- */
+  function renderWidgetMeta() {
+    document.getElementById("ver").textContent = current.version;
+    document.getElementById("title").textContent = current.title;
+    document.getElementById("sub").innerHTML = current.sub;
+    document.getElementById("fname").textContent = current.file;
+    document.getElementById("fileName2").textContent = current.file;
+    document.getElementById("footerSrc").textContent = current.footerSrc;
+    $url.placeholder = current.ph;
+
+    var card = document.getElementById("noticeCard");
+    card.className = "card " + (current.noticeClass || "");
+    document.getElementById("noticeTitle").textContent = current.noticeTitle;
+    document.getElementById("noticeBody").innerHTML = current.noticeBody;
+
+    document.getElementById("feats").innerHTML = current.feats.map(function (f) {
+      return '<div class="f"><div class="t">' + f.t + '</div><div class="d">' + f.d + '</div></div>';
+    }).join("");
+
+    document.getElementById("selfSteps").innerHTML = current.selfSteps.map(function (s) {
+      return "<li>" + s + "</li>";
+    }).join("");
+
+    var sc = document.getElementById("sitesCard");
+    if (current.sites && current.sites.length) {
+      sc.style.display = "";
+      document.getElementById("sitesTable").innerHTML =
+        "<tr><th>站点</th><th>域名</th><th>状态</th><th>路由 / 说明</th></tr>" +
+        current.sites.map(function (s) {
+          var cls = s.state === "ok" ? "pill" : s.state === "warn" ? "pill warnp" : "pill bad";
+          return "<tr><td><b>" + s.name + "</b></td>" +
+            '<td class="mono">' + s.host + "</td>" +
+            '<td><span class="' + cls + '">' + s.stateText + "</span></td>" +
+            '<td class="mono">' + s.route + "<br>" + s.note + "</td></tr>";
+        }).join("");
+    } else {
+      sc.style.display = "none";
+    }
+  }
+
+  function renderTabs() {
+    document.getElementById("tabs").innerHTML = WIDGETS.map(function (w, i) {
+      return '<button data-i="' + i + '" class="' + (w === current ? "on" : "") + '">' + w.tab + "</button>";
+    }).join("");
+    Array.prototype.forEach.call(
+      document.querySelectorAll("#tabs button"),
+      function (b) {
+        b.addEventListener("click", function () {
+          var i = parseInt(b.getAttribute("data-i"), 10);
+          if (WIDGETS[i] === current) return;
+          current = WIDGETS[i];
+          renderTabs();
+          renderWidgetMeta();
+          restoreUrl();
+          render();
+        });
+      }
+    );
+  }
+
+  /* ---------- 安装链接 ---------- */
+  function render() {
+    var url = $url.value.trim();
+    if (!isHttpUrl(url)) {
+      $btn.disabled = true;
+      $out.textContent = url ? "地址需要以 http:// 或 https:// 开头。" : "填写上方地址后，这里会生成安装深链。";
+      $qr.innerHTML = '<span style="font-size:11px;color:#9c858b;text-align:center;line-height:1.5">二维码<br>待生成</span>';
+      currentLink = "";
+      return;
+    }
+    currentLink = buildLink(url);
+    $btn.disabled = false;
+    $out.textContent = currentLink;
+
+    if (window.QRCode) {
+      $qr.innerHTML = "";
+      new QRCode($qr, {
+        text: currentLink, width: 146, height: 146,
+        colorDark: "#2b1a1f", colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } else {
+      $qr.innerHTML = '<img alt="安装二维码" src="https://api.qrserver.com/v1/create-qr-code/?size=292x292&margin=0&data=' +
+        encodeURIComponent(currentLink) + '">';
+    }
+    try { localStorage.setItem(storeKey(current.key), url); } catch (e) {}
+  }
+
+  /* 回填：优先上一次填过的地址，其次推断同目录下的同名文件 */
+  function restoreUrl() {
+    var v = "";
+    try { v = localStorage.getItem(storeKey(current.key)) || ""; } catch (e) {}
+    if (!v && location.protocol.indexOf("http") === 0) {
+      var guess = location.href.replace(/[^/]*$/, "").replace(/\/web\/?$/, "/widget/") + current.file;
+      if (new RegExp("/widget/" + current.file.replace(".", "\\.") + "$").test(guess)) v = guess;
+    }
+    if (!v) {
+      // 没存过也没法推断 —— 至少在页面上给个形状提示
+      v = "";
+    }
+    $url.value = v;
+  }
+
+  $url.addEventListener("input", render);
+
+  $btn.addEventListener("click", function () {
+    if (!currentLink) return;
+    window.location.href = currentLink;
+    toast("正在唤起 CapyPlayer…");
+  });
+
+  document.getElementById("btnCopyLink").addEventListener("click", function () {
+    if (!currentLink) return toast("请先填写有效的 JS 地址");
+    copy(currentLink, "安装链接已复制");
+  });
+
+  document.getElementById("btnCopyUrl").addEventListener("click", function () {
+    var u = $url.value.trim();
+    if (!isHttpUrl(u)) return toast("请先填写有效的 JS 地址");
+    copy(u, "JS 地址已复制");
+  });
+
+  document.getElementById("btnOpen").addEventListener("click", function () {
+    var u = $url.value.trim();
+    if (!isHttpUrl(u)) return toast("请先填写有效的 JS 地址");
+    window.open(u, "_blank", "noopener");
+  });
+
+  function copy(text, okMsg) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () { toast(okMsg); },
+        function () { fallbackCopy(text, okMsg); });
+    } else {
+      fallbackCopy(text, okMsg);
+    }
+  }
+
+  function fallbackCopy(text, okMsg) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:-1000px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); toast(okMsg); }
+    catch (e) { toast("复制失败，请手动选中"); }
+    document.body.removeChild(ta);
+  }
+
+  renderTabs();
+  renderWidgetMeta();
+  restoreUrl();
+  render();
+})();
+</script>
+</body>
+</html>
