@@ -35,6 +35,17 @@ node tools/selftest.js            # 红果：36 项断言
 两个脚本都用模拟沙箱加载组件，跑在**真实站点**上。苹果CMS 那个额外带一条**离线夹具轨**：
 把各站页面形态做成合成 HTML，验证解析器，不受站点存活影响。
 
+### 1.5 验证线上产物（改完推送后跑这个）
+
+```bash
+node tools/verify_remote.js          # 从 CDN 拉取已发布的 JS，全链路验证
+node tools/verify_remote.js --hash   # 额外打印 commit SHA 锁定形式的地址
+```
+
+它会：**从 jsDelivr 拉已发布的组件 → 校验与本地字节一致（防漏推/防缓存错版本）
+→ 在沙箱加载远端那份代码 → 真打一次线上数据（分类→列表→详情→取流）→ 打印安装深链**。
+这是最接近 App 真实加载路径的验证。
+
 ### 2. 安装（组件已托管在 jsDelivr，开箱即用）
 
 两个组件都已发布到公共仓库 `Tonyhilo/capyplayer-widgets`，通过 jsDelivr CDN 分发：
@@ -163,12 +174,13 @@ widget/maccms.js              苹果CMS 通用组件（交付物）
 widget/hongguo.js             红果组件（交付物）
 tools/selftest_maccms.js      苹果CMS 自测：离线夹具 + 真实站点 + 自动探测
 tools/selftest.js             红果自测
-web/index.html                一键安装落地页（双组件可切换）
+tools/verify_remote.js        线上产物验证：CDN → 沙箱 → 真实数据
+web/index.html                一键安装落地页（双组件可切换，地址已预填）
 docs/苹果CMS组件-技术报告.md    完整技术报告（实测数据 + file:line + P0/P1/P2）
 docs/红果组件-技术报告.md      红果技术报告
 docs/组件能力与可用资源.md      能力边界 + 五层资源 + 存活表
 _probe/                       可行性探测脚本，可复现全部结论
-_inspect/                     参考源码（《短剧库》Go 项目）
+_inspect/                     参考源码（《短剧库》Go 项目，已 gitignore 不入库）
 ```
 
 ---
